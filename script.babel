@@ -1,0 +1,204 @@
+/*React -- put Redux above this*/
+function BrLen(props) {
+  return (
+    <p id="break-length" class="text-center bg-info text-white card p-2">{props.length}</p>
+  )
+}
+function BrDec(props) {
+  return (
+  <button id="break-decrement" class="btn text-info" onClick={props.onClick}><i class="fas fa-minus"/></button>
+  )
+}
+function BrInc(props) {
+  return (
+  <button id="break-increment" class="btn text-info" onClick={props.onClick}><i class="fas fa-plus"/></button>
+  )
+}
+function SessLen(props) {
+  return (
+    <p id="session-length" class="card p-2 bg-info text-white">{props.length}</p>
+  )
+}
+function SessDec(props) {
+  return (
+  <button id="session-decrement" class="btn text-info" onClick={props.onClick}><i class="fas fa-minus"/></button>
+  )
+}
+function SessInc(props) {
+  return (
+  <button id="session-increment" class="btn text-info" onClick={props.onClick}><i class="fas fa-plus"/></button>
+  )
+}
+function TimerLabel(props) {
+  if (props.sessionRunning) {
+    
+    return (
+    <p id="timer-label" class="card-footer text-white bg-info">Session: Time Remaining</p>
+    )
+  } else {
+    return (
+    <p id="timer-label" class="card-footer text-white bg-info">Break: Time Remaining</p>
+    )
+  }
+}
+function TimeLeft(props) {
+  let secLeft = Math.floor(props.timeLeft/ 1000);
+  let min = "0" + String(Math.floor(secLeft / 60));
+  let sec = "0" + String(Math.floor(secLeft % 60));
+  let clockMin = min.slice(min.length - 2);
+  let clockSec = sec.slice(sec.length - 2)
+  return (
+  <p id="time-left" class="card p-3 bg-info text-light">{clockMin}:{clockSec}</p>
+  )
+}
+function StartStop(props) {
+ if (props.stopped) {
+  return (
+    <button id="start_stop" class="btn text-info" onClick={props.onClick}><i class="fas fa-play"/></button>
+    )
+  } else {
+    return (
+    <button id="start_stop" class="btn text-info" onClick={props.onClick}><i class="fas fa-pause"/></button>
+    )
+  }
+}
+function Reset(props) {
+  return (
+    <button id="reset" class="btn text-info" onClick={props.onClick}><i class="fas fa-undo-alt"/></button>
+  );
+}
+function Alarm(props) {
+  return(
+  <audio src="http://soundbible.com/grab.php?id=2171&type=mp3" id="beep"></audio>
+    );
+}
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state= {session: 25, break: 5, sessionRunning: true, stopped: true, startTime: 0, timer: 0, alarm: false, timeLeft: 1500000};
+    this.handleInc = this.handleInc.bind(this);
+    this.handleDec = this.handleDec.bind(this);
+    this.handleStStop = this.handleStStop.bind(this);
+    this.handleReset = this.handleReset.bind(this);
+    this.playAlarm = this.playAlarm.bind(this);
+  }
+  handleInc(event) {
+    if (event.target.id == "break-increment" && this.state.break < 60) {
+      let newBreak = this.state.break + 1;
+      if (!this.state.sessionRunning) {
+        let newTimeLeft = this.state.timeLeft + 60000;
+        this.setState({timeLeft: newTimeLeft})
+      }
+      this.setState({break: newBreak});
+    } else if (event.target.id =="session-increment" && this.state.session < 60) {
+      let newSession = this.state.session + 1;
+      if (this.state.sessionRunning) {
+        let newTimeLeft = this.state.timeLeft + 60000;
+        this.setState({timeLeft: newTimeLeft});
+      };
+      this.setState({session: newSession});
+    };
+  }
+  handleDec(event) {
+    if (event.target.id == "break-decrement" && this.state.break > 1) {
+      let newBreak = this.state.break - 1;
+      if (!this.state.sessionRunning) {
+        let newTimeLeft = this.state.timeLeft - 60000;
+        this.setState({timeLeft: newTimeLeft});
+      }
+      this.setState({break: newBreak});
+    } else if (event.target.id =="session-decrement" && this.state.session > 1) {
+      let newSession = this.state.session - 1;
+      if (this.state.sessionRunning) {
+        let newTimeLeft = this.state.timeLeft - 60000;
+        this.setState({timeLeft: newTimeLeft})
+        this.setState({session: newSession});
+    };
+  }
+}
+  handleStStop() {
+    if (this.state.stopped) {
+      this.setState({stopped: false});
+      var newTimer;
+      this.setState({timer: newTimer});
+      newTimer = setInterval(() => {
+        if (this.state.stopped) {
+          clearInterval(newTimer);
+          
+        } else {
+          let newTimeLeft = this.state.timeLeft - 1000;
+          this.setState({timeLeft: newTimeLeft});
+          if (this.state.timeLeft == 0) {
+            this.setState({alarm: true})
+            this.playAlarm();
+          }
+          if (this.state.timeLeft < 0) {
+            let breakTimeLeft = this.state.break * 60000;
+            let isSession = !this.state.sessionRunning;
+            this.setState({timeLeft: breakTimeLeft, sessionRunning: isSession})
+          };
+        };
+      }, 1000);
+    } else {
+      this.setState({stopped: true, timer: 0});
+    }
+  }
+  handleReset() {
+    this.setState({session: 25, break: 5, sessionRunning: true, stopped: true, startTime: 0, alarm: false, timeLeft: 1500000});
+    this.playAlarm();
+  }
+  playAlarm() {
+    if (this.state.alarm) {
+      document.getElementById("beep").play();
+    } else {
+      let beep = document.getElementById("beep");
+      beep.pause();
+      beep.currentTime = 0;
+      
+    }
+  }
+  render() {
+    return (
+      <div class="container-fluid text-center">
+        <h1 class="bg-info display-3 text-white shadow"><i class="fas fa-stopwatch"/> 25 + 5 Clock</h1>
+        <div class="row">
+          <div class="col card pt-3 ml-3 mt-3 mb-3 shadow">
+            <div class="row justify-content-center">
+            <SessDec onClick={this.handleDec}/>
+            <SessLen length={this.state.session} />
+            <SessInc onClick={this.handleInc}/>
+            </div>
+            <p id="session-label" class="card-footer text-white bg-info">Session Length</p>
+          </div>
+          <div class="col-md-8 card pt-3 ml-3 my-3 shadow">
+            <div class="row justify-content-center">
+            <StartStop stopped={this.state.stopped} onClick={this.handleStStop} />
+            <TimeLeft timeLeft={this.state.timeLeft} />            
+            <Reset onClick={this.handleReset}/>
+            </div>
+            <TimerLabel sessionRunning={this.state.sessionRunning} />
+          </div>
+           <div class="col card pt-3 mx-3 my-3 shadow">
+             <div class="row justify-content-center">
+            <BrDec onClick={this.handleDec}/>
+            <BrLen length={this.state.break}/>
+            <BrInc onClick={this.handleInc}/>
+             </div>
+            <p id="break-label" class="card-footer text-white bg-info">Break Length</p>
+          </div>
+        <Alarm />
+        </div>
+        <div class="row mb-5">
+          <div class="col-md"><img id="clock1" class="shadow" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Huygens_first_pendulum_clock.png" alt="diagram of pendulum clock's inner workings" height="800px"/></div>
+          <div class="col-md d-flex flex-column">
+            <p class="display-4">Tempus fugit.</p>
+            <img id="tempus-fugit" class="shadow" src="https://upload.wikimedia.org/wikipedia/commons/8/85/E4CC_appendix2.jpg" alt="image of winged hourglass on book"/>              
+            <div></div>
+          </div>
+          <div class="col-md"><img id="clock2" class="shadow" src="https://upload.wikimedia.org/wikipedia/commons/1/17/Huygens_first_pendulum_clock_-_front_view.png" alt="diagram of pendulum clock" height="800px"/></div>
+        </div>
+      </div>
+    )
+  }
+}
+ReactDOM.render(<App />, document.getElementById("container"));
